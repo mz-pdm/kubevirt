@@ -58,12 +58,12 @@ func (t *Console) Console(request *restful.Request, response *restful.Response) 
 
 	vm, err := t.virtClient.VM(namespace).Get(vmName, k8sv1meta.GetOptions{})
 	if errors.IsNotFound(err) {
-		logging.DefaultLogger().Info().V(3).Msgf("VM '%s' does not exist", vmName)
+		logging.V(3).LogInfo("VM '%s' does not exist", vmName)
 		response.WriteError(http.StatusNotFound, fmt.Errorf("VM does not exist"))
 		return
 	}
 	if err != nil {
-		logging.DefaultLogger().Error().Reason(err).Msgf("Error fetching VM '%s'", vmName)
+		logging.Error(err, "Error fetching VM '%s'", vmName)
 		response.WriteError(http.StatusInternalServerError, err)
 		return
 	}
@@ -80,7 +80,7 @@ func (t *Console) Console(request *restful.Request, response *restful.Response) 
 	uri, err := virtHandlerCon.ConsoleURI(vm)
 	if err != nil {
 		msg := fmt.Sprintf("Looking up the connection details for virt-handler on node %s failed", vm.Status.NodeName)
-		log.Error().Reason(err).Msg(msg)
+		log.LogError(err, msg)
 		response.WriteError(http.StatusInternalServerError, fmt.Errorf(msg))
 		return
 	}
@@ -104,7 +104,7 @@ func (t *Console) Console(request *restful.Request, response *restful.Response) 
 				Msgf("Failed to connect to virt-handler")
 			response.WriteError(resp.StatusCode, err)
 		} else {
-			log.Error().Reason(err).Msgf("Failed to connect to virt-handler")
+			log.LogError(err, "Failed to connect to virt-handler")
 			response.WriteError(http.StatusInternalServerError, err)
 		}
 		return
@@ -113,7 +113,7 @@ func (t *Console) Console(request *restful.Request, response *restful.Response) 
 
 	clientSocket, err := upgrader.Upgrade(response.ResponseWriter, request.Request, nil)
 	if err != nil {
-		log.Error().Reason(err).Msgf("Failed to upgrade client websocket connection")
+		log.LogError(err, "Failed to upgrade client websocket connection")
 		response.WriteError(http.StatusBadRequest, err)
 		return
 	}
@@ -133,7 +133,7 @@ func (t *Console) Console(request *restful.Request, response *restful.Response) 
 
 	err = <-errorChan
 	if err != nil {
-		log.Error().Reason(err).Msgf("Proxied Web Socket connection failed")
+		log.LogError(err, "Proxied Web Socket connection failed")
 	}
 	response.WriteHeader(http.StatusOK)
 }

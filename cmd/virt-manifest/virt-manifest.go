@@ -48,9 +48,9 @@ func newVirtManifestApp(host *string, port *int, libvirtUri *string) *virtManife
 
 func (app *virtManifestApp) Run() {
 	log := logging.DefaultLogger()
-	log.Info().Msg("Starting virt-manifest server")
+	log.LogInfo("Starting virt-manifest server")
 
-	log.Info().Msg("Connecting to libvirt")
+	log.LogInfo("Connecting to libvirt")
 
 	domainConn, err := cli.NewConnection(app.LibvirtUri, "", "", 60*time.Second)
 	if err != nil {

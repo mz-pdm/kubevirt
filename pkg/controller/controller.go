@@ -161,14 +161,14 @@ func Dequeue(s cache.Store, w workqueue.RateLimitingInterface, dispatch Controll
 func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 	defer HandlePanic()
 	defer c.queue.ShutDown()
-	logging.DefaultLogger().Info().Msg("Starting controller.")
+	logging.Info("Starting controller.")
 
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(c.runWorker, time.Second, stopCh)
 	}
 
 	<-stopCh
-	logging.DefaultLogger().Info().Msg("Stopping controller.")
+	logging.Info("Stopping controller.")
 }
 
 func (c *Controller) StartInformer(stopCh chan struct{}) {

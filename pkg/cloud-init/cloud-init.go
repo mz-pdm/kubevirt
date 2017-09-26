@@ -74,7 +74,7 @@ func defaultIsoFunc(isoOutFile string, inFiles []string) error {
 
 	err := cmd.Start()
 	if err != nil {
-		logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("genisoimage cmd failed to start while generating iso file %s", isoOutFile))
+		logging.V(2).LogError(err, "genisoimage cmd failed to start while generating iso file %s", isoOutFile)
 		return err
 	}
 
@@ -86,11 +86,11 @@ func defaultIsoFunc(isoOutFile string, inFiles []string) error {
 	for {
 		select {
 		case <-timeout:
-			logging.DefaultLogger().V(2).Error().Msg(fmt.Sprintf("Timed out generating cloud-init iso at path %s", isoOutFile))
+			logging.V(2).LogError(nil, "Timed out generating cloud-init iso at path %s", isoOutFile)
 			cmd.Process.Kill()
 		case err := <-done:
 			if err != nil {
-				logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("genisoimage returned non-zero exit code while generating iso file %s", isoOutFile))
+				logging.V(2).LogError(err, "genisoimage returned non-zero exit code while generating iso file %s", isoOutFile)
 				return err
 			}
 			return nil
@@ -103,7 +103,7 @@ func removeFile(path string) error {
 	if err != nil && os.IsNotExist(err) {
 		return nil
 	} else if err != nil {
-		logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("failed to remove cloud-init temporary data file %s", path))
+		logging.V(2).LogError(err, "failed to remove cloud-init temporary data file %s", path)
 		return err
 	}
 	return nil
@@ -144,19 +144,19 @@ func md5CheckSum(filePath string) ([]byte, error) {
 func setFileOwnership(username string, file string) error {
 	usrObj, err := user.Lookup(username)
 	if err != nil {
-		logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("unable to look up username %s", username))
+		logging.V(2).LogError(err, "unable to look up username %s", username)
 		return err
 	}
 
 	uid, err := strconv.Atoi(usrObj.Uid)
 	if err != nil {
-		logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("unable to find uid for username %s", username))
+		logging.V(2).LogError(err, "unable to find uid for username %s", username)
 		return err
 	}
 
 	gid, err := strconv.Atoi(usrObj.Gid)
 	if err != nil {
-		logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("unable to find gid for username %s", username))
+		logging.V(2).LogError(err, "unable to find gid for username %s", username)
 		return err
 	}
 
@@ -166,7 +166,7 @@ func setFileOwnership(username string, file string) error {
 func filesAreEqual(path1 string, path2 string) (bool, error) {
 	exists, err := fileExists(path1)
 	if err != nil {
-		logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("unexpected error encountered while attempting to determine if %s exists", path1))
+		logging.V(2).LogError(err, "unexpected error encountered while attempting to determine if %s exists", path1)
 		return false, err
 	} else if exists == false {
 		return false, nil
@@ -174,7 +174,7 @@ func filesAreEqual(path1 string, path2 string) (bool, error) {
 
 	exists, err = fileExists(path2)
 	if err != nil {
-		logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("unexpected error encountered while attempting to determine if %s exists", path2))
+		logging.V(2).LogError(err, "unexpected error encountered while attempting to determine if %s exists", path2)
 		return false, err
 	} else if exists == false {
 		return false, nil
@@ -182,12 +182,12 @@ func filesAreEqual(path1 string, path2 string) (bool, error) {
 
 	sum1, err := md5CheckSum(path1)
 	if err != nil {
-		logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("calculating md5 checksum failed for %s", path1))
+		logging.V(2).LogError(err, "calculating md5 checksum failed for %s", path1)
 		return false, err
 	}
 	sum2, err := md5CheckSum(path2)
 	if err != nil {
-		logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("calculating md5 checksum failed for %s", path2))
+		logging.V(2).LogError(err, "calculating md5 checksum failed for %s", path2)
 		return false, err
 	}
 
@@ -383,7 +383,7 @@ func GenerateLocalData(domain string, namespace string, spec *v1.CloudInitSpec) 
 	domainBasePath := GetDomainBasePath(domain, namespace)
 	err = os.MkdirAll(domainBasePath, 0755)
 	if err != nil {
-		logging.DefaultLogger().V(2).Error().Reason(err).Msg(fmt.Sprintf("unable to create cloud-init base path %s", domainBasePath))
+		logging.V(2).LogError(err, "unable to create cloud-init base path %s", domainBasePath)
 		return err
 	}
 
@@ -446,12 +446,12 @@ func GenerateLocalData(domain string, namespace string, spec *v1.CloudInitSpec) 
 			err = os.Rename(isoStaging, iso)
 			if err != nil {
 				// This error is not something we need to block iso creation for.
-				logging.DefaultLogger().Error().Reason(err).Msg(fmt.Sprintf("Cloud-init failed to rename file %s to %s", isoStaging, iso))
+				logging.Error(err, "Cloud-init failed to rename file %s to %s", isoStaging, iso)
 				return err
 			}
 		}
 
-		logging.DefaultLogger().V(2).Info().Msg(fmt.Sprintf("generated nocloud iso file %s", iso))
+		logging.V(2).LogInfo("generated nocloud iso file %s", iso)
 	}
 	return nil
 }

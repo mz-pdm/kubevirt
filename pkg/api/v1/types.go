@@ -43,6 +43,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 
+	"kubevirt.io/kubevirt/pkg/logging"
 	"kubevirt.io/kubevirt/pkg/precond"
 )
 
@@ -333,6 +334,10 @@ func NewVM(name string, uid types.UID) *VirtualMachine {
 			Kind:       VirtualMachineGroupVersionKind.Kind,
 		},
 	}
+}
+
+func (v *VirtualMachine) Log() *logging.FilteredLogger {
+	return logging.DefaultLogger().Object(v)
 }
 
 type MigrationEvent string

@@ -27,7 +27,9 @@ import (
 	"strings"
 	"testing"
 
-	"kubevirt.io/kubevirt/pkg/api/v1"
+	k8sv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var logCalled bool = false
@@ -40,6 +42,30 @@ func (l MockLogger) Log(params ...interface{}) error {
 	logCalled = true
 	logParams = append(logParams, params)
 	return nil
+}
+
+type mockVirtualMachine struct {
+	metav1.TypeMeta
+	ObjectMeta metav1.ObjectMeta
+	LoggableObject
+}
+
+func newVM() *mockVirtualMachine {
+	return &mockVirtualMachine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "foo",
+			UID:       "1234",
+			Namespace: k8sv1.NamespaceDefault,
+		},
+	}
+}
+
+func (v *mockVirtualMachine) GetObjectKind() schema.ObjectKind {
+	return &v.TypeMeta
+}
+
+func (v *mockVirtualMachine) GetObjectMeta() metav1.Object {
+	return &v.ObjectMeta
 }
 
 func assert(t *testing.T, condition bool, failMessage string) {
@@ -297,8 +323,8 @@ func TestObject(t *testing.T) {
 	setUp()
 	log := MakeLogger(MockLogger{})
 	log.SetLogLevel(DEBUG)
-	vm := v1.VirtualMachine{}
-	log.Object(&vm).Log("test", "message")
+	vm := newVM()
+	log.Object(vm).Log("test", "message")
 	logEntry := logParams[0].([]interface{})
 	assert(t, logEntry[0].(string) == "level", "Logged line did not have level entry")
 	assert(t, logEntry[1].(string) == logLevelNames[INFO], "Logged line was not of level INFO")

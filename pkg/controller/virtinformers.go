@@ -86,7 +86,7 @@ func (f *kubeInformerFactory) Start(stopCh <-chan struct{}) {
 			logging.DefaultLogger().Info().Msgf("SKIPPING informer %s", name)
 			continue
 		}
-		logging.DefaultLogger().Info().Msgf("STARTING informer %s", name)
+		logging.Info("STARTING informer %s", name)
 		go informer.Run(stopCh)
 		f.startedInformers[name] = true
 	}

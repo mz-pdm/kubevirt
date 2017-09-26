@@ -263,3 +263,35 @@ func (l FilteredLogger) Reason(err error) *FilteredLogger {
 	l.err = err
 	return &l
 }
+
+func (l FilteredLogger) format(msg string, args ...interface{}) {
+	if len(args) == 0 {
+		l.Msg(msg)
+	} else {
+		l.Msgf(msg, args...)
+	}
+}
+
+func V(level int) *FilteredLogger {
+	return DefaultLogger().V(level)
+}
+
+func Info(msg string, args ...interface{}) {
+	DefaultLogger().Info().format(msg, args...)
+}
+
+func Error(reason error, msg string, args ...interface{}) {
+	l := DefaultLogger().Error()
+	if reason != nil {
+		l = l.Reason(reason)
+	}
+	l.format(msg, args...)
+}
+
+func (l FilteredLogger) LogInfo(msg string, args ...interface{}) {
+	l.Info().format(msg, args...)
+}
+
+func (l FilteredLogger) LogError(reason error, msg string, args ...interface{}) {
+	l.Error().Reason(reason).format(msg, args...)
+}
